@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Tracker — Distraction-Free Study Companion</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            surface: {
+              50: '#fbfbfb',
+              100: '#f4f4f5',
+              200: '#e4e4e7',
+              300: '#d4d4d8',
+              800: '#27272a',
+              900: '#18181b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="min-h-screen bg-[#fbfbfb] text-[#18181b] flex flex-col font-sans selection:bg-zinc-200">
+
+  <!-- Top App Navigation Bar -->
+  <header class="border-b border-zinc-200 bg-white sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- Brand & Version -->
+      <div class="flex items-center space-x-6">
+        <a href="/" class="flex items-center space-x-2.5 font-medium text-zinc-900 hover:text-zinc-700">
+          <div class="w-7 h-7 bg-zinc-900 text-white rounded-lg flex items-center justify-center font-mono font-semibold text-xs shadow-sm">
+            ST
+          </div>
+          <span class="text-base font-semibold tracking-tight">Study Tracker</span>
+        </a>
+
+        <!-- Desktop Navigation Tabs -->
+        <nav class="hidden md:flex items-center space-x-1" id="main-nav">
+          <button data-tab="dashboard" class="nav-tab px-3 py-1.5 text-sm font-medium rounded-md transition-quiet bg-zinc-100 text-zinc-900">
+            Dashboard
+          </button>
+          <button data-tab="courses" class="nav-tab px-3 py-1.5 text-sm font-medium rounded-md transition-quiet text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50">
+            Courses
+          </button>
+          <button data-tab="sessions" class="nav-tab px-3 py-1.5 text-sm font-medium rounded-md transition-quiet text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50">
+            Sessions
+          </button>
+          <button data-tab="timer" class="nav-tab px-3 py-1.5 text-sm font-medium rounded-md transition-quiet text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50">
+            Focus Timer
+          </button>
+        </nav>
+      </div>
+
+      <!-- Right Header Actions (Streak, User Pill, Auth) -->
+      <div class="flex items-center space-x-3">
+        <!-- Weekly Streak Indicator -->
+        <div id="streak-badge" class="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-900 border border-amber-200/60" title="Consecutive Active Study Weeks">
+          <svg class="w-3.5 h-3.5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.527.82-1.12 2.05-1.12 3.952 0 .584-.04 1.157-.123 1.706A4.5 4.5 0 005.14 12.5C5.14 15.538 7.603 18 10.64 18c3.038 0 5.501-2.462 5.501-5.5 0-2.32-1.077-4.475-2.277-6.574-.533-.933-1.055-1.92-1.469-3.373zM10.64 16c-1.934 0-3.5-1.567-3.5-3.5 0-.82.285-1.576.77-2.176.438-.544.73-1.218.73-2.024 0-.756.128-1.428.324-1.99.36 1.05.85 2.036 1.34 2.894 1.06 1.855 2.036 3.65 2.036 5.296 0 1.933-1.566 3.5-3.5 3.5z" clip-rule="evenodd" />
+          </svg>
+          <span class="tabular-nums font-semibold" id="header-streak-count">0</span>
+          <span>wk streak</span>
+        </div>
+
+        <!-- User Profile / Auth Button -->
+        <div id="auth-actions">
+          <button id="btn-open-auth" class="px-3 py-1.5 text-xs font-medium rounded-md bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet shadow-sm">
+            Sign In
+          </button>
+          <div id="user-menu" class="hidden items-center space-x-2">
+            <span id="user-pill" class="text-xs font-medium text-zinc-600 bg-zinc-100 px-2.5 py-1 rounded-md border border-zinc-200">
+              @user
+            </span>
+            <button id="btn-logout" class="text-xs text-zinc-500 hover:text-zinc-900 p-1.5 rounded transition-quiet" title="Sign Out">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Nav Bar -->
+    <div class="md:hidden flex border-t border-zinc-200 px-2 py-1.5 overflow-x-auto space-x-1 bg-zinc-50/50">
+      <button data-tab="dashboard" class="nav-tab text-xs px-3 py-1.5 rounded font-medium bg-zinc-200 text-zinc-900">Dashboard</button>
+      <button data-tab="courses" class="nav-tab text-xs px-3 py-1.5 rounded font-medium text-zinc-600 hover:text-zinc-900">Courses</button>
+      <button data-tab="sessions" class="nav-tab text-xs px-3 py-1.5 rounded font-medium text-zinc-600 hover:text-zinc-900">Sessions</button>
+      <button data-tab="timer" class="nav-tab text-xs px-3 py-1.5 rounded font-medium text-zinc-600 hover:text-zinc-900">Timer</button>
+    </div>
+  </header>
+
+  <!-- Guest Banner (Shown when not authenticated) -->
+  <div id="guest-banner" class="bg-zinc-100 border-b border-zinc-200 py-2.5 px-4 text-center text-xs text-zinc-600 flex items-center justify-center space-x-2">
+    <span>You are viewing in preview mode.</span>
+    <button id="banner-login-btn" class="font-semibold text-zinc-900 underline hover:text-black">
+      Sign in or register
+    </button>
+    <span>to sync courses and record persistent study data.</span>
+  </div>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8">
+
+    <!-- ==================== TAB: DASHBOARD ==================== -->
+    <section id="tab-dashboard" class="tab-content space-y-8">
+      
+      <!-- Welcome Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Study Overview</h1>
+          <p class="text-sm text-zinc-500 mt-0.5">Track your study momentum, course coverage, and weekly continuity.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="dash-quick-log" class="px-3.5 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet flex items-center space-x-1.5 shadow-sm">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            <span>Log Session</span>
+          </button>
+          <button id="dash-start-timer" class="px-3.5 py-2 text-xs font-medium rounded-lg bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-50 transition-quiet flex items-center space-x-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Start Timer</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Metrics Cards Grid -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Total Hours -->
+        <div class="card-subtle p-5 rounded-xl">
+          <span class="text-xs font-medium text-zinc-500">Total Study Time</span>
+          <div class="mt-2 flex items-baseline space-x-1.5">
+            <span class="text-2xl font-semibold tabular-nums text-zinc-900" id="stat-total-hours">0.0</span>
+            <span class="text-xs text-zinc-500 font-mono">hours</span>
+          </div>
+          <span class="text-[11px] text-zinc-400 mt-1 block" id="stat-total-minutes-sub">0 min logged</span>
+        </div>
+
+        <!-- Weekly Streak -->
+        <div class="card-subtle p-5 rounded-xl">
+          <span class="text-xs font-medium text-zinc-500">Weekly Streak</span>
+          <div class="mt-2 flex items-baseline space-x-1.5">
+            <span class="text-2xl font-semibold tabular-nums text-amber-700" id="stat-weekly-streak">0</span>
+            <span class="text-xs text-zinc-500 font-mono">weeks</span>
+          </div>
+          <span class="text-[11px] text-zinc-400 mt-1 block">Consecutive study</span>
+        </div>
+
+        <!-- Total Sessions -->
+        <div class="card-subtle p-5 rounded-xl">
+          <span class="text-xs font-medium text-zinc-500">Completed Sessions</span>
+          <div class="mt-2 flex items-baseline space-x-1.5">
+            <span class="text-2xl font-semibold tabular-nums text-zinc-900" id="stat-total-sessions">0</span>
+            <span class="text-xs text-zinc-500 font-mono">sessions</span>
+          </div>
+          <span class="text-[11px] text-zinc-400 mt-1 block">Logged records</span>
+        </div>
+
+        <!-- Active Courses -->
+        <div class="card-subtle p-5 rounded-xl">
+          <span class="text-xs font-medium text-zinc-500">Enrolled Courses</span>
+          <div class="mt-2 flex items-baseline space-x-1.5">
+            <span class="text-2xl font-semibold tabular-nums text-zinc-900" id="stat-course-count">0</span>
+            <span class="text-xs text-zinc-500 font-mono">courses</span>
+          </div>
+          <span class="text-[11px] text-zinc-400 mt-1 block">Currently tracked</span>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid: Course Breakdown & Recent Sessions -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Course Distribution (2 cols) -->
+        <div class="card-subtle p-6 rounded-xl lg:col-span-2 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-semibold text-zinc-900">Study Distribution by Course</h2>
+            <button id="dash-view-courses-btn" class="text-xs text-zinc-500 hover:text-zinc-900 font-medium transition-quiet">
+              Manage courses &rarr;
+            </button>
+          </div>
+          <div id="course-progress-list" class="space-y-4 pt-1">
+            <div class="text-xs text-zinc-400 py-6 text-center">No courses or sessions logged yet.</div>
+          </div>
+        </div>
+
+        <!-- Right: Mini Quick Timer Widget (1 col) -->
+        <div class="card-subtle p-6 rounded-xl flex flex-col justify-between space-y-5 bg-gradient-to-b from-white to-zinc-50/50">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-zinc-900 uppercase tracking-wider">Quick Stopwatch</span>
+              <span id="quick-timer-status" class="w-2 h-2 rounded-full bg-zinc-300"></span>
+            </div>
+            <!-- Timer Clock -->
+            <div class="mt-6 text-center">
+              <div id="dash-timer-display" class="font-mono text-4xl font-semibold tabular-nums tracking-tight text-zinc-900">
+                00:00:00
+              </div>
+              <p class="text-xs text-zinc-500 mt-1" id="dash-timer-course-label">Select a course to begin</p>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="space-y-2.5">
+            <select id="dash-timer-course-select" class="w-full text-xs py-2 px-3 bg-white border border-zinc-200 rounded-lg text-zinc-800 focus:outline-none focus:border-zinc-900 transition-quiet">
+              <option value="">Choose Course...</option>
+            </select>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="dash-timer-toggle-btn" class="py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet">
+                Start
+              </button>
+              <button id="dash-timer-save-btn" disabled class="py-2 text-xs font-medium rounded-lg bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed transition-quiet">
+                Save Session
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Recent Sessions Section -->
+      <div class="card-subtle p-6 rounded-xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-zinc-900">Recent Sessions</h2>
+          <button id="dash-view-all-sessions-btn" class="text-xs text-zinc-500 hover:text-zinc-900 font-medium transition-quiet">
+            View all sessions &rarr;
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-zinc-100 text-zinc-400 font-medium">
+                <th class="pb-2">Date</th>
+                <th class="pb-2">Course</th>
+                <th class="pb-2">Duration</th>
+                <th class="pb-2">Notes</th>
+              </tr>
+            </thead>
+            <tbody id="recent-sessions-tbody" class="divide-y divide-zinc-100 text-zinc-700">
+              <tr>
+                <td colspan="4" class="py-6 text-center text-zinc-400">No study sessions recorded yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+
+    <!-- ==================== TAB: COURSES ==================== -->
+    <section id="tab-courses" class="tab-content hidden space-y-6">
+      
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Your Courses</h1>
+          <p class="text-sm text-zinc-500 mt-0.5">Organize curricula, subjects, and study goals.</p>
+        </div>
+        <button id="btn-show-add-course" class="px-3.5 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet flex items-center space-x-1.5 shadow-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>New Course</span>
+        </button>
+      </div>
+
+      <!-- Add Course Inline Form (collapsible) -->
+      <div id="add-course-panel" class="hidden card-subtle p-5 rounded-xl bg-zinc-50/70 border-zinc-300">
+        <h2 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-3">Add New Course</h2>
+        <form id="form-create-course" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-1">
+            <label class="block text-xs text-zinc-600 mb-1">Course Title *</label>
+            <input type="text" id="course-title-input" required placeholder="e.g. Distributed Systems" class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 bg-white focus:outline-none focus:border-zinc-900">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-xs text-zinc-600 mb-1">Description (Optional)</label>
+            <div class="flex space-x-2">
+              <input type="text" id="course-desc-input" placeholder="e.g. MIT 6.824 Labs and consensus papers" class="flex-1 text-xs p-2.5 rounded-lg border border-zinc-200 bg-white focus:outline-none focus:border-zinc-900">
+              <button type="submit" class="px-4 py-2.5 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet">
+                Save
+              </button>
+              <button type="button" id="btn-cancel-course" class="px-3 py-2.5 text-xs text-zinc-600 hover:text-zinc-900">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Courses Grid -->
+      <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="col-span-full py-12 text-center text-xs text-zinc-400">Loading courses...</div>
+      </div>
+
+    </section>
+
+
+    <!-- ==================== TAB: SESSIONS ==================== -->
+    <section id="tab-sessions" class="tab-content hidden space-y-6">
+      
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Study Sessions</h1>
+          <p class="text-sm text-zinc-500 mt-0.5">Log focused hours and review historical session activity.</p>
+        </div>
+        <button id="btn-toggle-log-session" class="px-3.5 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet flex items-center space-x-1.5 shadow-sm">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          <span>Log Session</span>
+        </button>
+      </div>
+
+      <!-- Log Session Inline Form (collapsible) -->
+      <div id="log-session-panel" class="hidden card-subtle p-5 rounded-xl bg-zinc-50/70 border-zinc-300">
+        <h2 class="text-xs font-semibold text-zinc-900 uppercase tracking-wider mb-3">Record Study Session</h2>
+        <form id="form-log-session" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div>
+            <label class="block text-xs text-zinc-600 mb-1">Course *</label>
+            <select id="session-course-select" required class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 bg-white focus:outline-none focus:border-zinc-900">
+              <option value="">Select course...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-600 mb-1">Duration (minutes) *</label>
+            <input type="number" id="session-minutes-input" min="1" max="1440" required placeholder="45" class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 bg-white focus:outline-none focus:border-zinc-900 font-mono">
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-600 mb-1">Date *</label>
+            <input type="date" id="session-date-input" required class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 bg-white focus:outline-none focus:border-zinc-900">
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-600 mb-1">Notes (Optional)</label>
+            <input type="text" id="session-notes-input" placeholder="Chapters, problems, or topics covered" class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 bg-white focus:outline-none focus:border-zinc-900">
+          </div>
+          <div class="sm:col-span-4 flex justify-end space-x-2 pt-2">
+            <button type="button" id="btn-cancel-session" class="px-3 py-2 text-xs text-zinc-600 hover:text-zinc-900">
+              Cancel
+            </button>
+            <button type="submit" class="px-4 py-2 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet">
+              Save Session
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Filters Toolbar -->
+      <div class="card-subtle p-4 rounded-xl flex flex-wrap items-center gap-3 bg-white text-xs">
+        <span class="font-medium text-zinc-500">Filter by:</span>
+        <select id="filter-course-select" class="p-1.5 rounded-md border border-zinc-200 bg-zinc-50 text-zinc-700">
+          <option value="">All Courses</option>
+        </select>
+        <div class="flex items-center space-x-1">
+          <span class="text-zinc-400">From:</span>
+          <input type="date" id="filter-start-date" class="p-1.5 rounded-md border border-zinc-200 bg-zinc-50 text-zinc-700">
+        </div>
+        <div class="flex items-center space-x-1">
+          <span class="text-zinc-400">To:</span>
+          <input type="date" id="filter-end-date" class="p-1.5 rounded-md border border-zinc-200 bg-zinc-50 text-zinc-700">
+        </div>
+        <button id="btn-clear-filters" class="text-xs text-zinc-500 hover:text-zinc-900 ml-auto font-medium">
+          Reset filters
+        </button>
+      </div>
+
+      <!-- Sessions Full Table -->
+      <div class="card-subtle rounded-xl overflow-hidden">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-zinc-50 border-b border-zinc-200 text-zinc-500 font-medium">
+            <tr>
+              <th class="py-3 px-4">Date</th>
+              <th class="py-3 px-4">Course</th>
+              <th class="py-3 px-4">Duration</th>
+              <th class="py-3 px-4">Notes</th>
+              <th class="py-3 px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="sessions-table-body" class="divide-y divide-zinc-100 text-zinc-700">
+            <tr>
+              <td colspan="5" class="py-12 text-center text-zinc-400">Loading session records...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+
+    <!-- ==================== TAB: FOCUS TIMER ==================== -->
+    <section id="tab-timer" class="tab-content hidden max-w-2xl mx-auto space-y-8 py-4">
+      
+      <div class="text-center space-y-1">
+        <h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Distraction-Free Timer</h1>
+        <p class="text-sm text-zinc-500">Pick a course, set your interval, and study with single-task focus.</p>
+      </div>
+
+      <!-- Main Timer Surface -->
+      <div class="card-subtle p-8 sm:p-12 rounded-2xl text-center space-y-8 shadow-sm">
+        
+        <!-- Course Selection -->
+        <div class="max-w-xs mx-auto">
+          <label class="block text-xs font-medium text-zinc-500 mb-1.5 text-left">Subject / Course</label>
+          <select id="main-timer-course-select" class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 bg-zinc-50 focus:outline-none focus:border-zinc-900 text-zinc-800">
+            <option value="">Select a course to record...</option>
+          </select>
+        </div>
+
+        <!-- Big Tabular Display -->
+        <div class="py-4">
+          <div id="main-timer-clock" class="font-mono text-6xl sm:text-7xl font-semibold tabular-nums tracking-tight text-zinc-900">
+            00:00:00
+          </div>
+          <span id="main-timer-badge" class="inline-block mt-3 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium text-zinc-500 bg-zinc-100">
+            READY
+          </span>
+        </div>
+
+        <!-- Timer Controls -->
+        <div class="flex items-center justify-center space-x-3">
+          <button id="btn-timer-toggle" class="w-32 py-3 text-sm font-medium rounded-xl bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet shadow-sm">
+            Start
+          </button>
+          <button id="btn-timer-reset" class="px-5 py-3 text-sm font-medium rounded-xl bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50 transition-quiet">
+            Reset
+          </button>
+          <button id="btn-timer-save" disabled class="px-5 py-3 text-sm font-medium rounded-xl bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed transition-quiet">
+            Log Session
+          </button>
+        </div>
+
+        <!-- Quick Increments -->
+        <div class="pt-4 border-t border-zinc-100 flex items-center justify-center space-x-2 text-xs text-zinc-500">
+          <span>Preset intervals:</span>
+          <button data-add-min="15" class="preset-btn px-2.5 py-1 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-mono">+15m</button>
+          <button data-add-min="25" class="preset-btn px-2.5 py-1 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-mono">+25m (Pomodoro)</button>
+          <button data-add-min="45" class="preset-btn px-2.5 py-1 rounded-md bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-mono">+45m</button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Auth Modal (Login / Register) -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-zinc-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-zinc-200 space-y-5">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between">
+        <div class="flex space-x-4 border-b border-zinc-200 w-full">
+          <button id="tab-auth-login" class="pb-2 text-sm font-semibold border-b-2 border-zinc-900 text-zinc-900">
+            Sign In
+          </button>
+          <button id="tab-auth-register" class="pb-2 text-sm font-semibold border-b-2 border-transparent text-zinc-400 hover:text-zinc-600">
+            Create Account
+          </button>
+        </div>
+        <button id="btn-close-auth" class="text-zinc-400 hover:text-zinc-700 ml-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Auth Error Notification -->
+      <div id="auth-error-box" class="hidden text-xs p-2.5 rounded-lg bg-rose-50 text-rose-800 border border-rose-200"></div>
+
+      <!-- Login Form -->
+      <form id="form-login" class="space-y-3.5">
+        <div>
+          <label class="block text-xs font-medium text-zinc-600 mb-1">Username</label>
+          <input type="text" id="login-username" required class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 focus:outline-none focus:border-zinc-900">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-zinc-600 mb-1">Password</label>
+          <input type="password" id="login-password" required class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 focus:outline-none focus:border-zinc-900">
+        </div>
+        <button type="submit" class="w-full py-2.5 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet mt-2 shadow-sm">
+          Sign In
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="form-register" class="hidden space-y-3.5">
+        <div>
+          <label class="block text-xs font-medium text-zinc-600 mb-1">Username (min 3 chars)</label>
+          <input type="text" id="reg-username" minlength="3" required class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 focus:outline-none focus:border-zinc-900">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-zinc-600 mb-1">Email</label>
+          <input type="email" id="reg-email" required class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 focus:outline-none focus:border-zinc-900">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-zinc-600 mb-1">Password (min 6 chars)</label>
+          <input type="password" id="reg-password" minlength="6" required class="w-full text-xs p-2.5 rounded-lg border border-zinc-200 focus:outline-none focus:border-zinc-900">
+        </div>
+        <button type="submit" class="w-full py-2.5 text-xs font-medium rounded-lg bg-zinc-900 text-white hover:bg-zinc-800 transition-quiet mt-2 shadow-sm">
+          Create Account
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- App Script -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
