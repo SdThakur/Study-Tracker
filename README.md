@@ -43,25 +43,25 @@ A production-ready, authenticated REST API for tracking courses and study sessio
 
 ## Features
 
-- **Authentication & Security (Lessons 3 & 7)**
+- **Authentication & Security **
   - User registration (`POST /auth/register`) with input validation and unique constraints.
   - Password hashing using **Argon2** via `pwdlib[argon2]`.
   - OAuth2 password flow issuing **JWT access tokens** (`POST /auth/token`).
   - Protected endpoints using the `CurrentUser` dependency (`GET /auth/me`).
-- **Course Management (Lessons 4, 5 & 6)**
+- **Course Management**
   - Full CRUD operations (`POST`, `GET`, `PATCH`, `DELETE` at `/courses`).
   - Strict **data ownership isolation**: Users can only view, modify, or delete courses they own.
-- **Study Sessions & Filtering (Lessons 2 & 6)**
+- **Study Sessions & Filtering**
   - Log sessions (`POST /sessions`) with minutes, date, and notes, validating course ownership.
   - List and filter sessions by `course_id`, `start_date`, and `end_date` with pagination.
-- **Progress & Streak Analytics (Lesson 6)**
+- **Progress & Streak Analytics**
   - `GET /stats`: Computes total minutes, total sessions, breakdown per course, and consecutive **weekly study streak**.
-- **Quality & Reliability (Lessons 8 & 9)**
+- **Quality & Reliability**
   - Modular project structure using `APIRouter`.
   - Type-safe configuration via `pydantic-settings` (`.env` support).
   - Timing header (`X-Process-Time`) middleware.
   - Automated test suite with **22 passing tests** utilizing an isolated in-memory SQLite database (`StaticPool`).
-- **Deployment (Lesson 10)**
+- **Deployment**
   - Containerized with multi-stage layer cached `Dockerfile`.
 
 ---
