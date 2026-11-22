@@ -27,12 +27,16 @@ const state = {
 
 // ==================== API Service ====================
 async function apiRequest(endpoint, options = {}) {
-  const headers = options.headers || {};
+  const headers = { ...(options.headers || {}) };
   if (state.token) {
     headers['Authorization'] = `Bearer ${state.token}`;
   }
-  if (options.body && !(options.body instanceof FormData)) {
-    headers['Content-Type'] = 'application/json';
+  if (options.body && !headers['Content-Type']) {
+    if (options.body instanceof URLSearchParams) {
+      headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    } else if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
   }
 
   const response = await fetch(`${API_BASE}${endpoint}`, {
@@ -41,13 +45,16 @@ async function apiRequest(endpoint, options = {}) {
   });
 
   if (response.status === 401) {
-    // Token expired or invalid
+    const hadToken = !!state.token;
     state.token = null;
     state.user = null;
     localStorage.removeItem('study_tracker_token');
     updateAuthUI();
-    showToast('Session expired. Please sign in.', 'error');
-    throw new Error('Unauthorized');
+    if (hadToken && endpoint !== '/auth/token') {
+      showToast('Session expired. Please sign in.', 'error');
+    }
+    const errData = await response.json().catch(() => null);
+    throw new Error(errData?.detail || 'Incorrect username or password');
   }
 
   if (response.status === 204) {
@@ -57,8 +64,17 @@ async function apiRequest(endpoint, options = {}) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const errorMsg = data?.detail || 'An error occurred';
-    throw new Error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
+    let errorMsg = 'An error occurred';
+    if (data?.detail) {
+      if (typeof data.detail === 'string') {
+        errorMsg = data.detail;
+      } else if (Array.isArray(data.detail)) {
+        errorMsg = data.detail.map(e => e.msg || e.detail || JSON.stringify(e)).join(', ');
+      } else {
+        errorMsg = JSON.stringify(data.detail);
+      }
+    }
+    throw new Error(errorMsg);
   }
 
   return data;
@@ -606,7 +622,7 @@ function setupEventListeners() {
       const res = await apiRequest('/auth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString(),
+        body: formData,
       });
 
       state.token = res.access_token;
@@ -643,7 +659,7 @@ function setupEventListeners() {
       const res = await apiRequest('/auth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString(),
+        body: formData,
       });
 
       state.token = res.access_token;
