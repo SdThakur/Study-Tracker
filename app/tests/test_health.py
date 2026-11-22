@@ -23,6 +23,12 @@ def test_frontend_app_endpoint(client: TestClient):
     assert "Study Tracker" in response.text
 
 
+def test_database_viewer_endpoint(client: TestClient):
+    response = client.get("/db")
+    assert response.status_code == 200
+    assert "text/html" in response.headers.get("content-type", "")
+
+
 def test_health_endpoint(client: TestClient):
     response = client.get("/health")
     assert response.status_code == 200
